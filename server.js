@@ -6,7 +6,7 @@ I declare that this assignment is my own work in accordance with Seneca  Academi
 Name: _____Saniya Mansuri_________________ 
 Student ID: _______170528236_______ 
 Date: ________10/7/2024________
-Cyclic Web App URL: _______________________________________________________
+Cyclic Web App URL: ________________https://replit.com/@sanumansu602/web322-app_______________________________________
 GitHub Repository URL: __https://github.com/sanumansu/web322-app.git____________________________________________________
 
 ********************************************************************************/ 
