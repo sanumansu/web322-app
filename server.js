@@ -1,3 +1,20 @@
+/*********************************************************************************
+
+WEB322 – Assignment 02
+I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
+
+Name: _____Saniya Mansuri_________________ 
+Student ID: _______170528236_______ 
+Date: ________10/7/2024________
+Cyclic Web App URL: _______________________________________________________
+GitHub Repository URL: __https://github.com/sanumansu/web322-app.git____________________________________________________
+
+********************************************************************************/ 
+
+
+
+
+
 const storeService = require('./store-service');
 
 const express = require('express');
