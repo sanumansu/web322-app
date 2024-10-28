@@ -51,9 +51,68 @@ function initialize() {
     });
   }
 
+ 
+
+
+  function addItem(itemData) {
+    return new Promise((resolve, reject) => {
+      itemData.published = (itemData.published) ? true : false;
+      itemData.id = items.length + 1;
+      items.push(itemData);
+      resolve(itemData);
+    });
+  }
+
+
+
+  function getItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+      const filteredItems = items.filter(item => item.category === category);
+      if (filteredItems.length > 0) {
+        resolve(filteredItems);
+      } else {
+        reject("no results returned");
+      }
+    });
+  }
+
+  function getItemsByMinDate(minDateStr) {
+    return new Promise((resolve, reject) => {
+      const minDate = new Date(minDateStr);
+      const filteredItems = items.filter(item => new Date(item.postDate) >= minDate);
+      if (filteredItems.length > 0) {
+        resolve(filteredItems);
+      } else {
+        reject("no results returned");
+      }
+    });
+  }
+
+  function getItemById(id) {
+    return new Promise((resolve, reject) => {
+      // Convert id to a number if it's not already
+      const itemId = Number(id);
+      
+      // Find the item with the matching id
+      const item = items.find(item => item.id === itemId);
+      
+      if (item) {
+        // If item is found, resolve the promise with the item
+        resolve(item);
+      } else {
+        // If item is not found, reject the promise with an error message
+        reject("no result returned");
+      }
+    });
+  }
+
   module.exports = {
     initialize,
     getAllItems,
     getPublishedItems,
-    getCategories
+    getCategories,
+    addItem,
+    getItemsByCategory,
+    getItemsByMinDate,
+    getItemById
   };

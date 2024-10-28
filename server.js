@@ -10,11 +10,20 @@ Cyclic Web App URL: ________________https://replit.com/@sanumansu602/web322-app_
 GitHub Repository URL: __https://github.com/sanumansu/web322-app.git____________________________________________________
 
 ********************************************************************************/ 
+const multer = require("multer");
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 
+cloudinary.config({
+  cloud_name: 'dkpkj0g8s',
+  api_key: '212416428519765',
+  api_secret: 'iKiwwKDBGfNt-0VK44fGkUc925A',
+  secure: true
+});
 
+const upload = multer();
 
-
-
+const path = require('path');
 const storeService = require('./store-service');
 
 const express = require('express');
@@ -23,25 +32,23 @@ const app = express();
 const HTTP_PORT = process.env.PORT || 8080;
 
 app.use(express.static('public'));
+app.use(express.urlencoded({extended: true}));
+
+// Global error handler for unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 app.get('/', (req, res) => {
     res.redirect('/about');
   });
 
   app.get('/about', (req, res) => {
-    res.sendFile(__dirname + '/views/about.html');
+    res.sendFile(path.join(__dirname, '/views/about.html'));
   });
 
 
-  storeService.initialize()
-  .then(() => {
-    app.listen(HTTP_PORT, () => {
-      console.log(`Express http server listening on ${HTTP_PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.log(`Failed to initialize store service: ${err}`);
-  });
+  
 
 
   app.get('/shop', (req, res) => {
@@ -55,14 +62,25 @@ app.get('/', (req, res) => {
   });
 
   app.get('/items', (req, res) => {
-    storeService.getAllItems()
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => {
-        res.json({ message: err });
-      });
+    const category = req.query.category;
+    const minDate = req.query.minDate;
+
+    let promise;
+
+  if (category) {
+    promise = storeService.getItemsByCategory(parseInt(category));
+  } else if (minDate) {
+    promise = storeService.getItemsByMinDate(minDate);
+  } else {
+    promise = storeService.getAllItems();
+  }
+
+      promise.then(items => {
+    res.json(items);
+  }).catch(err => {
+    res.status(500).json({ message: err });
   });
+});
 
   app.get('/categories', (req, res) => {
     storeService.getCategories()
@@ -74,6 +92,85 @@ app.get('/', (req, res) => {
       });
   });
   
-  app.use((req, res) => {
-    res.status(404).send("Page Not Found");
+ 
+
+  app.get('/items/add', (req, res) => {
+    res.sendFile(path.join(__dirname, '/views/addItem.html'));
+});
+
+
+app.get('/item/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  
+  storeService.getItemById(id)
+    .then(item => {
+      if (item) {
+        res.json(item);
+      } else {
+        res.status(404).json({ message: "Item not found" });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ message: `Error retrieving item: ${err}` });
+    });
+});
+
+// New POST route
+app.post('/items/add', upload.single('featureImage'), (req, res) => {
+  if(req.file){
+    let streamUpload = (req) => {
+        return new Promise((resolve, reject) => {
+            let stream = cloudinary.uploader.upload_stream(
+                (error, result) => {
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        reject(error);
+                    }
+                }
+            );
+
+            streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+    };
+
+    async function upload(req) {
+        let result = await streamUpload(req);
+        console.log(result);
+        return result;
+    }
+
+    upload(req).then((uploaded)=>{
+        processItem(uploaded.url);
+    });
+}else{
+    processItem("");
+}
+ 
+function processItem(imageUrl){
+  req.body.featureImage = imageUrl;
+
+  storeService.addItem(req.body)
+  .then(() => {
+      res.redirect('/items');
+  }).catch((err) => {
+      res.status(500).send("Error adding item: " + err);
+  });
+}
+
+});
+
+app.use((req, res) => {
+  res.status(404).send("Page Not Found");
+});
+
+
+storeService.initialize()
+  .then(() => {
+    app.listen(HTTP_PORT, () => {
+      console.log(`Express http server listening on ${HTTP_PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.log(`Failed to initialize store service: ${err}`);
   });
