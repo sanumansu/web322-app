@@ -90,17 +90,13 @@ function initialize() {
 
   function getItemById(id) {
     return new Promise((resolve, reject) => {
-      // Convert id to a number if it's not already
       const itemId = Number(id);
       
-      // Find the item with the matching id
       const item = items.find(item => item.id === itemId);
       
       if (item) {
-        // If item is found, resolve the promise with the item
         resolve(item);
       } else {
-        // If item is not found, reject the promise with an error message
         reject("no result returned");
       }
     });
