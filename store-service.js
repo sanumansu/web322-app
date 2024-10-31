@@ -4,21 +4,19 @@ let items = [];
 let categories = [];
 
 function initialize() {
-    return new Promise((resolve, reject) => {
-      fs.readFile('./data/items.json', 'utf8')
-        .then(itemsData => {
-          items = JSON.parse(itemsData);
-          return fs.readFile('./data/categories.json', 'utf8');
-        })
-        .then(categoriesData => {
-          categories = JSON.parse(categoriesData);
-          resolve();
-        })
-        .catch(err => {
-          reject("Unable to read file");
-        });
-    });
-  }
+  return Promise.all([
+    fs.readFile('./data/items.json', 'utf8'),
+    fs.readFile('./data/categories.json', 'utf8')
+  ])
+  .then(([itemsData, categoriesData]) => {
+    items = JSON.parse(itemsData);
+    categories = JSON.parse(categoriesData);
+  })
+  .catch(() => {
+    throw new Error("Unable to read file");
+  });
+}
+
 
   function getAllItems() {
     return new Promise((resolve, reject) => {
@@ -55,9 +53,9 @@ function initialize() {
 
 
   function addItem(itemData) {
-    return new Promise((resolve, reject) => {
-      itemData.published = (itemData.published) ? true : false;
-      itemData.id = items.length + 1;
+    return new Promise((resolve) => {
+      itemData.published = itemData.published === undefined ? false : true;
+    itemData.id = items.length + 1;
       items.push(itemData);
       resolve(itemData);
     });
@@ -67,6 +65,9 @@ function initialize() {
 
   function getItemsByCategory(category) {
     return new Promise((resolve, reject) => {
+      if (!Number.isInteger(category)) {
+        reject("Invalid category. Must be an integer.");
+      }
       const filteredItems = items.filter(item => item.category === category);
       if (filteredItems.length > 0) {
         resolve(filteredItems);
@@ -79,6 +80,9 @@ function initialize() {
   function getItemsByMinDate(minDateStr) {
     return new Promise((resolve, reject) => {
       const minDate = new Date(minDateStr);
+      if (isNaN(minDate.getTime())) {
+        reject("Invalid date format. Use YYYY-MM-DD.");
+      }
       const filteredItems = items.filter(item => new Date(item.postDate) >= minDate);
       if (filteredItems.length > 0) {
         resolve(filteredItems);

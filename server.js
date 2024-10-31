@@ -7,7 +7,7 @@
 * 
 *  Name: __________Saniya Mansuri____________ Student ID: ________170528236_______ Date: __10/28/2024______________
 *
-*  Cyclic Web App URL: ___________https://replit.com/@sanumansu602/web322-app_____________________________________________
+*  Cyclic Web App URL: ___________https://replit.com/@sanumansu602/web322-app-1_____________________________________________
 * 
 *  GitHub Repository URL: _______https://github.com/sanumansu/web322-app.git_______________________________________________
 *
@@ -17,14 +17,6 @@ const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
-cloudinary.config({
-  cloud_name: 'dkpkj0g8s',
-  api_key: '212416428519765',
-  api_secret: 'iKiwwKDBGfNt-0VK44fGkUc925A',
-  secure: true
-});
-
-const upload = multer();
 
 const path = require('path');
 const storeService = require('./store-service');
@@ -34,10 +26,20 @@ const app = express();
 
 const HTTP_PORT = process.env.PORT || 8080;
 
+cloudinary.config({
+  cloud_name: 'dkpkj0g8s',
+  api_key: '212416428519765',
+  api_secret: 'iKiwwKDBGfNt-0VK44fGkUc925A',
+  secure: true
+});
+
+
+const upload = multer();
+
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
 
-// Global error handler for unhandled promise rejections
+
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
@@ -51,8 +53,6 @@ app.get('/', (req, res) => {
   });
 
 
-  
-
 
   app.get('/shop', (req, res) => {
     storeService.getPublishedItems()
@@ -60,9 +60,9 @@ app.get('/', (req, res) => {
         res.json(data);
       })
       .catch((err) => {
-        res.json({ message: err });
+        res.status(500).json({ message: `Error retrieving published items: ${err}` }));
       });
-  });
+  
 
   app.get('/items', (req, res) => {
     const category = req.query.category;
@@ -80,9 +80,8 @@ app.get('/', (req, res) => {
 
       promise.then(items => {
     res.json(items);
-  }).catch(err => {
-    res.status(500).json({ message: err });
-  });
+  })
+  .catch(err => res.status(500).json({ message: `Error retrieving items: ${err}` }));
 });
 
   app.get('/categories', (req, res) => {
@@ -90,9 +89,7 @@ app.get('/', (req, res) => {
       .then((data) => {
         res.json(data);
       })
-      .catch((err) => {
-        res.json({ message: err });
-      });
+      .catch((err) => res.status(500).json({ message: `Error retrieving categories: ${err}` }));
   });
   
  
