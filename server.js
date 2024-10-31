@@ -59,10 +59,10 @@ app.get('/', (req, res) => {
       .then((data) => {
         res.json(data);
       })
-      .catch((err) => {
+      .catch(err => 
         res.status(500).json({ message: `Error retrieving published items: ${err}` }));
-      });
-  
+  });
+
 
   app.get('/items', (req, res) => {
     const category = req.query.category;
