@@ -56,6 +56,7 @@ function initialize() {
     return new Promise((resolve) => {
       itemData.published = itemData.published === undefined ? false : true;
     itemData.id = items.length + 1;
+    itemData.category = parseInt(itemData.category);
       items.push(itemData);
       resolve(itemData);
     });

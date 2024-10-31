@@ -78,7 +78,8 @@ app.get('/', (req, res) => {
     promise = storeService.getAllItems();
   }
 
-      promise.then(items => {
+      promise
+      .then(items => {
     res.json(items);
   })
   .catch(err => res.status(500).json({ message: `Error retrieving items: ${err}` }));
