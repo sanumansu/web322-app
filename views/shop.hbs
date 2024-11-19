@@ -1,0 +1,47 @@
+
+<div class="row">
+  {{#if data.item}}
+    <section class="main col-md-9">
+      <article>
+        <h2>{{data.item.title}}</h2>
+        <div class="row">
+          <div class="col-4">
+            <img src="{{data.item.featureImage}}" alt="feature Image" style="width:100%" />
+          </div>
+          <div class="col-8">
+            <br /><br />
+            {{{safeHTML data.item.body}}}
+            <br /><br />
+            <strong>Category:</strong> {{data.item.category}}<br />
+            <strong>Price:</strong> ${{data.item.price}}<br />
+            <strong>Last Updated:</strong> {{data.item.postDate}}
+          </div>
+        </div>
+      </article>
+    </section>
+    <aside class="col-md-3">
+      <br /><br />
+      {{#if data.items}}
+        <h4>Items</h4>
+        <ul class="list-group">
+          {{#each data.items}}
+            <li class="list-group-item"><a href="/shop/{{this.id}}?category={{../viewingCategory}}">{{this.title}}</a></li>
+          {{/each}}
+        </ul>
+      {{/if}}
+      {{#if data.categories}}
+        <h4>Categories</h4>
+        <ul class="list-group">
+          {{#each data.categories}}
+            <li class="list-group-item"><a href="/shop?category={{this.id}}">{{this.category}}</a></li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    </aside>
+  {{else}}
+    <div class="col-md-12 text-center">
+      <h2>{{data.message}}</h2>
+      <p>Please try another Post / Category</p>
+    </div>
+  {{/if}}
+</div>

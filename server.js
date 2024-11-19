@@ -13,17 +13,15 @@
 *
 ********************************************************************************/ 
 
+
+const express = require('express');
+const exphbs = require('express-handlebars');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-
-
 const path = require('path');
 const storeService = require('./store-service');
-
-const express = require('express');
 const app = express();
-
 const HTTP_PORT = process.env.PORT || 8080;
 
 cloudinary.config({
@@ -33,34 +31,83 @@ cloudinary.config({
   secure: true
 });
 
+app.engine('.hbs', exphbs.engine({
+  extname: '.hbs',
+  helpers: {
+      navLink: function(url, options){
+          return '<li' + 
+              ((url == app.locals.activeRoute) ? ' class="active" ' : '') + 
+              '><a href="' + url + '">' + options.fn(this) + '</a></li>';
+      },
+      equal: function (lvalue, rvalue, options) {
+          if (arguments.length < 3)
+              throw new Error("Handlebars Helper equal needs 2 parameters");
+          if (lvalue != rvalue) {
+              return options.inverse(this);
+          } else {
+              return options.fn(this);
+          }
+      }
+  }
+}));
+
+app.set('view engine', '.hbs');
 
 const upload = multer();
-
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
 
+app.use(function(req,res,next){
+  let route = req.path.substring(1);
+  app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+  app.locals.viewingCategory = req.query.category;
+  next();
+});
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 app.get('/', (req, res) => {
-    res.redirect('/about');
-  });
+  res.redirect('/shop');
+});
 
   app.get('/about', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/about.html'));
+    res.render('about');
   });
 
 
-
-  app.get('/shop', (req, res) => {
-    storeService.getPublishedItems()
-      .then((data) => {
-        res.json(data);
-      })
-      .catch(err => 
-        res.status(500).json({ message: `Error retrieving published items: ${err}` }));
+  app.get("/shop", async (req, res) => {
+    let viewData = {};
+  
+    try {
+      let items = [];
+  
+      if (req.query.category) {
+        items = await storeService.getPublishedItems();
+      } else {
+        let categories = await storeService.getCategories();
+      }
+  
+      items.sort((a, b) => new Date(b.itemDate) - new Date(a.itemDate));
+  
+      let item = items[0];
+  
+      viewData.items = items;
+      viewData.item = item;
+    } catch (err) {
+      viewData.message = "no results";
+    }
+  
+    try {
+      let categories = await storeService.getCategories();
+  
+      viewData.categories = categories;
+    } catch (err) {
+      viewData.categoriesMessage = "no results";
+    }
+  
+    res.render("shop", { data: viewData });
   });
 
 
@@ -78,25 +125,29 @@ app.get('/', (req, res) => {
     promise = storeService.getAllItems();
   }
 
-      promise
-      .then(items => {
-    res.json(items);
+  promise
+  .then(items => {
+      res.render("items", {items: items});
   })
-  .catch(err => res.status(500).json({ message: `Error retrieving items: ${err}` }));
+  .catch(err => {
+      res.render("items", {message: "no results"});
+  });
 });
 
   app.get('/categories', (req, res) => {
     storeService.getCategories()
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => res.status(500).json({ message: `Error retrieving categories: ${err}` }));
+    .then((data) => {
+      res.render("categories", {categories: data});
+  })
+  .catch((err) => {
+      res.render("categories", {message: "no results"});
+  });
   });
   
  
 
   app.get('/items/add', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/addItem.html'));
+    res.render('addItem');
 });
 
 
@@ -116,7 +167,6 @@ app.get('/item/:id', (req, res) => {
     });
 });
 
-// New POST route
 app.post('/items/add', upload.single('featureImage'), (req, res) => {
   if(req.file){
     let streamUpload = (req) => {
@@ -148,6 +198,56 @@ app.post('/items/add', upload.single('featureImage'), (req, res) => {
     processItem("");
 }
  
+
+
+
+
+app.get('/shop/:id', async (req, res) => {
+
+  let viewData = {};
+
+  try{
+      let items = [];
+
+      if(req.query.category){
+          items = await storeService.getPublishedItemsByCategory(req.query.category);
+      }else{
+          items = await storeService.getPublishedItems();
+
+      }
+
+      items.sort((a,b) => new Date(b.itemDate) - new Date(a.itemDate));
+
+      viewData.items = items;
+
+  }catch(err){
+      viewData.message = "no results";
+  }
+
+  try{
+      viewData.item = await storeService.getItemById(req.params.id);
+
+  }catch(err){
+      viewData.message = "no results"; 
+  }
+
+  try{
+      let categories = await storeService.getCategories();
+
+      viewData.categories = categories;
+  }catch(err){
+      viewData.categoriesMessage = "no results"
+  }
+
+  res.render("shop", {data: viewData})
+});
+
+
+
+app.use((req, res) => {
+  res.status(404).render("404");
+});
+
 function processItem(imageUrl){
   req.body.featureImage = imageUrl;
 
@@ -161,11 +261,6 @@ function processItem(imageUrl){
 
 });
 
-app.use((req, res) => {
-  res.status(404).send("Page Not Found");
-});
-
-
 storeService.initialize()
   .then(() => {
     app.listen(HTTP_PORT, () => {
@@ -175,3 +270,9 @@ storeService.initialize()
   .catch((err) => {
     console.log(`Failed to initialize store service: ${err}`);
   });
+
+
+
+
+
+

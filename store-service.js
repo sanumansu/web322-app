@@ -39,6 +39,8 @@ function initialize() {
     });
   }
 
+
+
   function getCategories() {
     return new Promise((resolve, reject) => {
       if (categories.length > 0) {
@@ -50,17 +52,29 @@ function initialize() {
   }
 
  
+function getPublishedItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+        let filteredItems = items.filter(item => item.published === true && item.category == category);
+        
+        if (filteredItems.length > 0) {
+            resolve(filteredItems);
+        } else {
+            reject("No results returned");
+        }
+    });
+}
 
 
-  function addItem(itemData) {
-    return new Promise((resolve) => {
+function addItem(itemData) {
+  return new Promise((resolve) => {
       itemData.published = itemData.published === undefined ? false : true;
-    itemData.id = items.length + 1;
-    itemData.category = parseInt(itemData.category);
+      itemData.id = items.length + 1;
+      itemData.category = parseInt(itemData.category);
+      itemData.postDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
       items.push(itemData);
       resolve(itemData);
-    });
-  }
+  });
+}
 
 
 
@@ -115,5 +129,6 @@ function initialize() {
     addItem,
     getItemsByCategory,
     getItemsByMinDate,
-    getItemById
+    getItemById,
+    getPublishedItemsByCategory,
   };
