@@ -7,7 +7,7 @@
 * 
 *  Name: __________Saniya Mansuri____________ Student ID: ________170528236_______ Date: __10/28/2024______________
 *
-*  Cyclic Web App URL: ___________https://replit.com/@sanumansu602/web322-app-1_____________________________________________
+*  Cyclic Web App URL: ___________https://replit.com/@sanumansu602/web322-app-2_____________________________________________
 * 
 *  GitHub Repository URL: _______https://github.com/sanumansu/web322-app.git_______________________________________________
 *
