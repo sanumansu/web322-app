@@ -14,7 +14,7 @@
             <br /><br />
             <strong>Category:</strong> {{data.item.category}}<br />
             <strong>Price:</strong> ${{data.item.price}}<br />
-            <strong>Last Updated:</strong> {{data.item.postDate}}
+            <strong>Last Updated:</strong> {{#formatDate data.item.postDate}}{{/formatDate}}
           </div>
         </div>
       </article>

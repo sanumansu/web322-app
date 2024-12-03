@@ -47,7 +47,14 @@ app.engine('.hbs', exphbs.engine({
           } else {
               return options.fn(this);
           }
-      }
+      },
+      formatDate: function(dateObj){
+        let year = dateObj.getFullYear();
+        let month = (dateObj.getMonth() + 1).toString();
+        let day = dateObj.getDate().toString();
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2,'0')}`;
+    }
+    
   }
 }));
 
@@ -114,40 +121,52 @@ app.get('/', (req, res) => {
   app.get('/items', (req, res) => {
     const category = req.query.category;
     const minDate = req.query.minDate;
-
     let promise;
-
-  if (category) {
-    promise = storeService.getItemsByCategory(parseInt(category));
-  } else if (minDate) {
-    promise = storeService.getItemsByMinDate(minDate);
-  } else {
-    promise = storeService.getAllItems();
-  }
-
-  promise
-  .then(items => {
-      res.render("items", {items: items});
-  })
-  .catch(err => {
-      res.render("items", {message: "no results"});
+  
+    if (category) {
+      promise = storeService.getItemsByCategory(parseInt(category));
+    } else if (minDate) {
+      promise = storeService.getItemsByMinDate(minDate);
+    } else {
+      promise = storeService.getAllItems();
+    }
+  
+    promise
+      .then(items => {
+        if (items.length > 0) {
+          res.render("items", { items: items });
+        } else {
+          res.render("items", { message: "no results" });
+        }
+      })
+      .catch(err => {
+        res.render("items", { message: "no results" });
+      });
   });
-});
+
 
   app.get('/categories', (req, res) => {
-    storeService.getCategories()
-    .then((data) => {
-      res.render("categories", {categories: data});
-  })
-  .catch((err) => {
-      res.render("categories", {message: "no results"});
-  });
-  });
-  
- 
+  storeService.getCategories()
+    .then(categories => {
+      if (categories.length > 0) {
+        res.render("categories", { categories: categories });
+      } else {
+        res.render("categories", { message: "no results" });
+      }
+    })
+    .catch(err => {
+      res.render("categories", { message: "no results" });
+    });
+});
 
-  app.get('/items/add', (req, res) => {
-    res.render('addItem');
+app.get('/items/add', (req, res) => {
+  storeService.getCategories()
+    .then((data) => {
+      res.render("addPost", { categories: data });
+    })
+    .catch((err) => {
+      res.render("addPost", { categories: [] });
+    });
 });
 
 
@@ -201,6 +220,18 @@ app.post('/items/add', upload.single('featureImage'), (req, res) => {
 
 
 
+function processItem(imageUrl){
+  req.body.featureImage = imageUrl;
+
+  storeService.addItem(req.body)
+  .then(() => {
+      res.redirect('/items');
+  }).catch((err) => {
+      res.status(500).send("Error adding item: " + err);
+  });
+}
+
+});
 
 app.get('/shop/:id', async (req, res) => {
 
@@ -248,18 +279,48 @@ app.use((req, res) => {
   res.status(404).render("404");
 });
 
-function processItem(imageUrl){
-  req.body.featureImage = imageUrl;
 
-  storeService.addItem(req.body)
-  .then(() => {
-      res.redirect('/items');
-  }).catch((err) => {
-      res.status(500).send("Error adding item: " + err);
-  });
-}
 
+app.get('/categories/add', (req, res) => {
+  res.render('addCategory');
 });
+
+app.post('/categories/add', (req, res) => {
+  storeService.addCategory(req.body)
+    .then(() => {
+      res.redirect('/categories');
+    })
+    .catch((err) => {
+      res.status(500).send("Error adding category: " + err);
+    });
+});
+
+app.get('/categories/delete/:id', (req, res) => {
+  const id = req.params.id;
+  storeService.deleteCategoryById(id)
+    .then(() => {
+      res.redirect('/categories');
+    })
+    .catch((err) => {
+      res.status(500).send("Error deleting category: " + err);
+    });
+});
+
+app.get('/items/delete/:id', (req, res) => {
+  const id = req.params.id;
+  storeService.deleteItemById(id)
+    .then(() => {
+      res.redirect('/items');
+    })
+    .catch((err) => {
+      res.status(500).send("Error deleting item: " + err);
+    });
+});
+
+
+
+
+
 
 storeService.initialize()
   .then(() => {
