@@ -18,21 +18,38 @@
                 </button>
                 <a class="navbar-brand" href="#">WEB322 -Saniya Mansuri</a>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                     {{#navLink "/shop"}}Shop{{/navLink}}
-                     <li class="nav-item"><span class="nav-link">|</span></li>
-                        {{#navLink "/about"}}About{{/navLink}}
-                        <li class="nav-item"><span class="nav-link">|</span></li>
-                    </ul>
-                    <ul class="navbar-nav ml-auto">
-                       {{#navLink "/items"}}Items{{/navLink}}
-                       <li class="nav-item"><span class="nav-link">|</span></li>
-                        {{#navLink "/categories"}}Categories{{/navLink}}
-                        <li class="nav-item"><span class="nav-link">|</span></li>
-                     
-                    </ul>
-                </div>
+               <div class="collapse navbar-collapse" id="navbar-collapse">
+                  <ul class="nav navbar-nav">
+                 {{#navLink "/shop"}}Shop{{/navLink}}
+                    <li class="nav-item"><span class="nav-link">|</span></li>
+                 {{#navLink "/about"}}About{{/navLink}}
+                 <li class="nav-item"><span class="nav-link">|</span></li>
+  </ul>
+  <ul class="nav navbar-nav navbar-right">
+    {{#navLink "/items"}}Items{{/navLink}}
+    <li class="nav-item"><span class="nav-link">|</span></li>
+    {{#navLink "/categories"}}Categories{{/navLink}}
+    <li class="nav-item"><span class="nav-link">|</span></li>
+  </ul>
+  {{#if session.user}}
+    <form class="navbar-form navbar-right">
+      <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="userMenu" data-toggle="dropdown">
+          <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;{{session.user.userName}}&nbsp;&nbsp;<span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="userMenu">
+          <li><a href="/userHistory">User History</a></li>
+          <li><a href="/logout">Log Out</a></li>
+        </ul>
+      </div>
+       </form>
+         {{else}}
+            <form class="navbar-form navbar-right">
+          <a href="/register" class="btn btn-success"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Register</a>
+      <a href="/login" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-right"></span>&nbsp;&nbsp;Log In</a>
+          </form>
+       {{/if}}
+     </div>
             </div>
         </nav>
         <div class="container" style="padding-top: 90px;">

@@ -1,11 +1,11 @@
 
 /*********************************************************************************
-*  WEB322 – Assignment 05
+*  WEB322 – Assignment 06
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part 
 *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
 * 
-*  Name: __________Saniya Mansuri____________ Student ID: ________170528236_______ Date: __12/03/2024______________
+*  Name: __________Saniya Mansuri____________ Student ID: ________170528236_______ Date: __12/09/2024______________
 *
 *  Cyclic Web App URL: ___________https://replit.com/@sanumansu602/web322-app-2_____________________________________________
 * 
@@ -21,8 +21,14 @@ const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const path = require('path');
 const storeService = require('./store-service');
+const authData = require('./auth-service');
+
+const clientSessions = require('client-sessions');
+
 const app = express();
 const HTTP_PORT = process.env.PORT || 8080;
+
+
 
 cloudinary.config({
   cloud_name: 'dkpkj0g8s',
@@ -63,6 +69,20 @@ app.set('view engine', '.hbs');
 const upload = multer();
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
+const session = clientSessions({
+  cookieName: 'session',
+  secret: 'smsmsmssmsmsmssmmsmssmssmssmssmsmss', 
+  duration: 30 * 60 * 1000, // 30 minutes
+  activeDuration: 5 * 60 * 1000 // 5 minutes
+});
+
+app.use(session);
+
+app.use(function(req, res, next) {
+  res.locals.session = req.session;
+  next();
+});
+
 
 app.use(function(req,res,next){
   let route = req.path.substring(1);
@@ -71,9 +91,15 @@ app.use(function(req,res,next){
   next();
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+
+function ensureLogin(req, res, next) {
+  if (!req.session.user) {
+    res.redirect('/login');
+  } else {
+    next();
+  }
+}
+
 
 app.get('/', (req, res) => {
   res.redirect('/shop');
@@ -118,7 +144,7 @@ app.get('/', (req, res) => {
   });
 
 
-  app.get('/items', (req, res) => {
+  app.get('/items',(req, res) => {
     const category = req.query.category;
     const minDate = req.query.minDate;
     let promise;
@@ -145,7 +171,7 @@ app.get('/', (req, res) => {
   });
 
 
-  app.get('/categories', (req, res) => {
+  app.get('/categories',(req, res) => {
   storeService.getCategories()
     .then(categories => {
       if (categories.length > 0) {
@@ -205,19 +231,63 @@ app.post('/items/add', upload.single('featureImage'), (req, res) => {
     };
 
     async function upload(req) {
-        let result = await streamUpload(req);
-        console.log(result);
-        return result;
-    }
+      let result = await streamUpload(req);
+      console.log(result);
+      return result;
+  }
 
-    upload(req).then((uploaded)=>{
-        processItem(uploaded.url);
-    });
+  upload(req).then((uploaded)=>{
+      processItem(uploaded.url);
+  });
 }else{
-    processItem("");
+  processItem("");
 }
- 
 
+
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+app.post('/register', (req, res) => {
+  authData.registerUser(req.body)
+    .then(() => {
+      res.render('register', { successMessage: "User created" });
+    })
+    .catch((err) => {
+      res.render('register', { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+app.post('/login', (req, res) => {
+  req.body.userAgent = req.get('User-Agent');
+
+  authData.checkUser(req.body)
+    .then((user) => {
+      req.session.user = {
+        userName: user.userName,
+        email: user.email,
+        loginHistory: user.loginHistory
+      };
+      res.redirect('/items');
+    })
+    .catch((err) => {
+      res.render('login', { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+app.get('/userHistory', (req, res) => {
+  res.render('userHistory');
+});
 
 
 function processItem(imageUrl){
@@ -275,10 +345,6 @@ app.get('/shop/:id', async (req, res) => {
 
 
 
-app.use((req, res) => {
-  res.status(404).render("404");
-});
-
 
 
 app.get('/categories/add', (req, res) => {
@@ -318,18 +384,27 @@ app.get('/items/delete/:id', (req, res) => {
 });
 
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+
+app.use((req, res) => {
+  res.status(404).render("404");
+});
 
 
 
 
 storeService.initialize()
-  .then(() => {
-    app.listen(HTTP_PORT, () => {
+  .then(authData.initialize)
+  .then(function() {
+    app.listen(HTTP_PORT, function() {
       console.log(`Express http server listening on ${HTTP_PORT}`);
     });
   })
-  .catch((err) => {
-    console.log(`Failed to initialize store service: ${err}`);
+  .catch(function(err) {
+    console.log(`unable to start server: ${err}`);
   });
 
 
