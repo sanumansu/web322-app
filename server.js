@@ -171,19 +171,9 @@ app.get('/', (req, res) => {
   });
 
 
-  app.get('/categories',(req, res) => {
-  storeService.getCategories()
-    .then(categories => {
-      if (categories.length > 0) {
-        res.render("categories", { categories: categories });
-      } else {
-        res.render("categories", { message: "no results" });
-      }
-    })
-    .catch(err => {
-      res.render("categories", { message: "no results" });
-    });
-});
+ 
+
+
 
 app.get('/items/add', (req, res) => {
   storeService.getCategories()
@@ -347,16 +337,41 @@ app.get('/shop/:id', async (req, res) => {
 
 
 
-app.get('/categories/add', (req, res) => {
-  res.render('addCategory');
+
+app.get('/categories', (req, res) => {
+  storeService.getCategories()
+    .then(categories => {
+      if (categories.length > 0) {
+        res.render("categories", { categories: categories });
+      } else {
+        res.render("categories", { message: "No results" });
+      }
+    })
+    .catch(err => {
+      console.error("Error retrieving categories:", err);
+      res.render("categories", { message: "No results" });
+    });
 });
 
+
+app.get('/categories/add', (req, res) => {
+  res.render('addCategory'); 
+});
+
+
 app.post('/categories/add', (req, res) => {
-  storeService.addCategory(req.body)
+
+  const categoryData = {
+    category: req.body.category || null
+  };
+
+  storeService.addCategory(categoryData)
     .then(() => {
-      res.redirect('/categories');
+      console.log("Category added successfully");
+      res.redirect('/categories'); 
     })
-    .catch((err) => {
+    .catch(err => {
+      console.error("Error adding category:", err);
       res.status(500).send("Error adding category: " + err);
     });
 });
@@ -365,24 +380,28 @@ app.get('/categories/delete/:id', (req, res) => {
   const id = req.params.id;
   storeService.deleteCategoryById(id)
     .then(() => {
-      res.redirect('/categories');
+      console.log("Category deleted successfully");
+      res.redirect('/categories'); 
     })
-    .catch((err) => {
-      res.status(500).send("Error deleting category: " + err);
+    .catch(err => {
+      console.error("Error deleting category:", err);
+      res.status(500).send("Unable to Remove Category / Category not found");
     });
 });
 
 app.get('/items/delete/:id', (req, res) => {
   const id = req.params.id;
-  storeService.deleteItemById(id)
+
+  storeService.deletePostById(id)
     .then(() => {
-      res.redirect('/items');
+      console.log("Post deleted successfully");
+      res.redirect('/items'); 
     })
-    .catch((err) => {
-      res.status(500).send("Error deleting item: " + err);
+    .catch(err => {
+      console.error("Error deleting post:", err);
+      res.status(500).send("Unable to Remove Post / Post not found");
     });
 });
-
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);

@@ -1,4 +1,3 @@
-
 <div class="row">
   {{#if data.item}}
     <section class="main col-md-9">
@@ -19,6 +18,7 @@
         </div>
       </article>
     </section>
+    
     <aside class="col-md-3">
       <br /><br />
       {{#if data.items}}
@@ -29,6 +29,7 @@
           {{/each}}
         </ul>
       {{/if}}
+      
       {{#if data.categories}}
         <h4>Categories</h4>
         <ul class="list-group">
@@ -38,6 +39,7 @@
         </ul>
       {{/if}}
     </aside>
+    
   {{else}}
     <div class="col-md-12 text-center">
       <h2>{{data.message}}</h2>

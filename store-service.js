@@ -101,7 +101,7 @@ function getPublishedItemsByCategory(category) {
     Item.findAll({
       where: {
         published: true,
-        category: category
+        category: categoryId
       }
     })
       .then((items) => {
@@ -140,7 +140,7 @@ function getItemsByCategory(category) {
   return new Promise((resolve, reject) => {
     Item.findAll({
       where: {
-        category: category
+        category: categoryId
       }
     })
       .then((items) => {
@@ -190,52 +190,44 @@ function getItemById(id) {
 }
 
 
-function addCategory(categoryData) {
+function addCategory (categoryData) {
   return new Promise((resolve, reject) => {
   
-    for (let key in categoryData) {
-      if (categoryData[key] === "") {
-        categoryData[key] = null;
-      }
+    if (!categoryData.category) {
+      categoryData.category = null;
     }
 
     Category.create(categoryData)
-      .then((category) => {
-        resolve(category);
-      })
-      .catch((err) => {
-        reject("Unable to create category");
-      });
+      .then(() => resolve())
+      .catch(err => reject("Unable to create category: " + err));
   });
-}
-
+};
 
 function deleteCategoryById(id) {
   return new Promise((resolve, reject) => {
-    Category.destroy({
-      where: { id: id }
-    })
-      .then(() => {
-        resolve();
+    Category.destroy({ where: { id: id } })
+      .then((rowsDeleted) => {
+        if (rowsDeleted === 0) {
+          reject("Category not found");
+        } else {
+          resolve();
+        }
       })
-      .catch((err) => {
-        reject("Unable to delete category");
-      });
+      .catch(err => reject("Unable to delete category: " + err));
   });
-}
+};
 
-
-function deleteItemById(id) {
+function deletePostById(id) {
   return new Promise((resolve, reject) => {
-    Item.destroy({
-      where: { id: id }
-    })
-      .then(() => {
-        resolve();
+    Post.destroy({ where: { id: id } })
+      .then((rowsDeleted) => {
+        if (rowsDeleted === 0) {
+          reject("Post not found");
+        } else {
+          resolve();
+        }
       })
-      .catch((err) => {
-        reject("Unable to delete item");
-      });
+      .catch(err => reject("Unable to delete post: " + err));
   });
 }
 
@@ -253,5 +245,5 @@ function deleteItemById(id) {
     getPublishedItemsByCategory,
     addCategory,
     deleteCategoryById,
-    deleteItemById
+    deletePostById
   };
