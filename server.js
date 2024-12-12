@@ -13,15 +13,15 @@
 *
 ********************************************************************************/ 
 
-
+const storeService = require('./store-service');
+const authData = require('./auth-service');
 const express = require('express');
 const exphbs = require('express-handlebars');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const path = require('path');
-const storeService = require('./store-service');
-const authData = require('./auth-service');
+
 
 const clientSessions = require('client-sessions');
 
@@ -102,7 +102,7 @@ function ensureLogin(req, res, next) {
 
 
 app.get('/', (req, res) => {
-  res.redirect('/shop');
+  res.render('shop');
 });
 
   app.get('/about', (req, res) => {
@@ -144,7 +144,7 @@ app.get('/', (req, res) => {
   });
 
 
-  app.get('/items',(req, res) => {
+  app.get('/items',ensureLogin,(req, res) => {
     const category = req.query.category;
     const minDate = req.query.minDate;
     let promise;
@@ -175,7 +175,7 @@ app.get('/', (req, res) => {
 
 
 
-app.get('/items/add', (req, res) => {
+app.get('/items/add', ensureLogin,(req, res) => {
   storeService.getCategories()
     .then((data) => {
       res.render("addPost", { categories: data });
@@ -186,7 +186,7 @@ app.get('/items/add', (req, res) => {
 });
 
 
-app.get('/item/:id', (req, res) => {
+app.get('/item/:id',ensureLogin, (req, res) => {
   const id = parseInt(req.params.id);
   
   storeService.getItemById(id)
@@ -202,7 +202,7 @@ app.get('/item/:id', (req, res) => {
     });
 });
 
-app.post('/items/add', upload.single('featureImage'), (req, res) => {
+app.post('/items/add', ensureLogin,upload.single('featureImage'), (req, res) => {
   if(req.file){
     let streamUpload = (req) => {
         return new Promise((resolve, reject) => {
@@ -234,15 +234,15 @@ app.post('/items/add', upload.single('featureImage'), (req, res) => {
 }
 
 
-app.get('/login', (req, res) => {
+app.get('/login',(req, res) => {
   res.render('login');
 });
 
-app.get('/register', (req, res) => {
+app.get('/register',(req, res) => {
   res.render('register');
 });
 
-app.post('/register', (req, res) => {
+app.post('/register',(req, res) => {
   authData.registerUser(req.body)
     .then(() => {
       res.render('register', { successMessage: "User created" });
@@ -253,29 +253,27 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  req.body.userAgent = req.get('User-Agent');
-
-  authData.checkUser(req.body)
-    .then((user) => {
-      req.session.user = {
-        userName: user.userName,
-        email: user.email,
-        loginHistory: user.loginHistory
-      };
-      res.redirect('/items');
-    })
-    .catch((err) => {
-      res.render('login', { errorMessage: err, userName: req.body.userName });
-    });
+  const { userName, password } = req.body;
+  authData.checkUser({ userName, password })
+      .then(user => {
+          req.session.user = {
+              userName: user.userName,
+              email: user.email,
+              loginHistory: user.loginHistory
+          };
+          res.redirect('/items'); // Redirect after successful login
+      })
+      .catch(err => {
+          res.render('login', { errorMessage: err });
+      });
 });
-
 
 app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
 });
 
-app.get('/userHistory', (req, res) => {
+app.get('/userHistory',ensureLogin, (req, res) => {
   res.render('userHistory');
 });
 
@@ -293,7 +291,7 @@ function processItem(imageUrl){
 
 });
 
-app.get('/shop/:id', async (req, res) => {
+app.get('/shop/:id',async (req, res) => {
 
   let viewData = {};
 
@@ -338,7 +336,7 @@ app.get('/shop/:id', async (req, res) => {
 
 
 
-app.get('/categories', (req, res) => {
+app.get('/categories', ensureLogin,(req, res) => {
   storeService.getCategories()
     .then(categories => {
       if (categories.length > 0) {
@@ -354,12 +352,12 @@ app.get('/categories', (req, res) => {
 });
 
 
-app.get('/categories/add', (req, res) => {
+app.get('/categories/add',ensureLogin, (req, res) => {
   res.render('addCategory'); 
 });
 
 
-app.post('/categories/add', (req, res) => {
+app.post('/categories/add', ensureLogin,(req, res) => {
 
   const categoryData = {
     category: req.body.category || null
@@ -376,7 +374,7 @@ app.post('/categories/add', (req, res) => {
     });
 });
 
-app.get('/categories/delete/:id', (req, res) => {
+app.get('/categories/delete/:id',ensureLogin, (req, res) => {
   const id = req.params.id;
   storeService.deleteCategoryById(id)
     .then(() => {
@@ -389,7 +387,7 @@ app.get('/categories/delete/:id', (req, res) => {
     });
 });
 
-app.get('/items/delete/:id', (req, res) => {
+app.get('/items/delete/:id', ensureLogin,(req, res) => {
   const id = req.params.id;
 
   storeService.deletePostById(id)
@@ -408,26 +406,21 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 
-app.use((req, res) => {
+app.use((req, res,next) => {
   res.status(404).render("404");
 });
 
 
-
-
+  
 storeService.initialize()
-  .then(authData.initialize)
-  .then(function() {
-    app.listen(HTTP_PORT, function() {
-      console.log(`Express http server listening on ${HTTP_PORT}`);
+.then(authData.initialize)
+.then(function(){
+    app.listen(HTTP_PORT, function(){
+        console.log("app listening on: " + HTTP_PORT)
     });
-  })
-  .catch(function(err) {
-    console.log(`unable to start server: ${err}`);
-  });
-
-
-
+}).catch(function(err){
+    console.log("unable to start server: " + err);
+});
 
 
 

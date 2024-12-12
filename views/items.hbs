@@ -13,8 +13,12 @@
       <tr>
         <td>{{this.id}}</td>
         <td>{{this.title}}</td>
-        <td>${{this.price}}</td>
-        <td><a href="/items/delete/{{this.id}}" class="btn btn-danger">Remove</a></td>
+        <td>${{this.price.toFixed(2)}}</td> 
+        <td><a href="/items/delete/{{this.id}}" class="btn btn-danger" aria-label="Remove item {{this.title}}">Remove</a></td> 
+      </tr>
+    {{else}}
+      <tr>
+        <td colspan="4" class="text-center">No items available.</td>
       </tr>
     {{/each}}
   </tbody>

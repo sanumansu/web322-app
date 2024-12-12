@@ -1,0 +1,22 @@
+<h2>{{session.user.userName}} ({{session.user.email}}) History</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Login Date/Time</th>
+            <th>Client Information</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each session.user.loginHistory}}
+        <tr>
+            <td>{{formatDate this.dateTime}}</td> 
+            <td>{{this.userAgent}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan='2'>No login history available.</td></tr> 
+        {{/each}}
+    </tbody>
+</table>
+
+<a href="/items" class='btn btn-primary mt-3'>Back to Items</a> 

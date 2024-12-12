@@ -101,7 +101,7 @@ function getPublishedItemsByCategory(category) {
     Item.findAll({
       where: {
         published: true,
-        category: categoryId
+        category: category
       }
     })
       .then((items) => {
@@ -140,7 +140,7 @@ function getItemsByCategory(category) {
   return new Promise((resolve, reject) => {
     Item.findAll({
       where: {
-        category: categoryId
+        category: category
       }
     })
       .then((items) => {
@@ -219,7 +219,7 @@ function deleteCategoryById(id) {
 
 function deletePostById(id) {
   return new Promise((resolve, reject) => {
-    Post.destroy({ where: { id: id } })
+    Item.destroy({ where: { id: id } })
       .then((rowsDeleted) => {
         if (rowsDeleted === 0) {
           reject("Post not found");

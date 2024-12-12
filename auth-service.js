@@ -17,19 +17,18 @@ const userSchema = new Schema({
 let User;
 
 module.exports.initialize = function () {
-  return new Promise(function (resolve, reject) {
-      let db = mongoose.createConnection("mongodb+srv://sanumansu602:<s4RbsVG9kwU7EqK8>@cluster0.drnhq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+  return new Promise((resolve, reject) => {
+    let db = mongoose.createConnection("mongodb+srv://sanumansu602:s4RbsVG9kwU7EqK8@cluster0.drnhq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
 
-      db.on('error', (err)=>{
-          reject(err); // reject the promise with the provided error
-      });
-      db.once('open', ()=>{
-         User = db.model("users", userSchema);
-         resolve();
-      });
+    db.on('error', (err) => {
+      reject(err); 
+    });
+    db.once('open', () => {
+      User = db.model("users", userSchema);
+      resolve();
+    });
   });
 };
-
 
 async function registerUser(userData) {
   return new Promise((resolve, reject) => {

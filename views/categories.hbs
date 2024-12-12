@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-md-12">
     <h2>Categories</h2>
-    <a href="/categories/add" class="btn btn-success pull-right">Add Category</a>
+    <a href="/categories/add" class="btn btn-success float-end">Add Category</a> 
     <hr />
     {{#if categories.length}}
       <div class="table-responsive">
@@ -18,7 +18,7 @@
               <tr>
                 <td>{{id}}</td>
                 <td>{{category}}</td>
-                <td><a href="/categories/delete/{{id}}" class="btn btn-danger">Remove</a></td>
+                <td><a href="/categories/delete/{{id}}" class="btn btn-danger" aria-label="Remove category {{category}}">Remove</a></td> <!-- Added aria-label -->
               </tr>
             {{/each}}
           </tbody>
